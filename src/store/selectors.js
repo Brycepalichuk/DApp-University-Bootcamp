@@ -1,7 +1,17 @@
 import { get, groupBy, reject, maxBy, minBy } from 'lodash'
 import { createSelector } from 'reselect'
 import moment from 'moment'
-import { ETHER_ADDRESS, GREEN, RED, tokens, ether, formatBalance } from '../helpers'
+import { ETHER_ADDRESS, GREEN, RED, ether, tokens } from '../helpers'
+
+// TODO: Move me to helpers file
+export const formatBalance = (balance) => {
+  const precision = 100 // 2 decimal places
+
+  balance = ether(balance)
+  balance = Math.round(balance * precision) / precision // Use 2 decimal places
+
+  return balance
+}
 
 const account = state => get(state, 'web3.account')
 export const accountSelector = createSelector(account, a => a)
@@ -235,7 +245,7 @@ export const myOpenOrdersSelector = createSelector(
     orders = orders.filter((o) => o.user === account)
     // Decorate orders - add display attributes
     orders = decorateMyOpenOrders(orders)
-    // Sort orders by dte descending
+    // Sort orders by date descending
     orders = orders.sort((a,b) => b.timestamp - a.timestamp)
     return orders
   }
@@ -253,6 +263,7 @@ const decorateMyOpenOrders = (orders, account) => {
 
 const decorateMyOpenOrder = (order, account) => {
   let orderType = order.tokenGive === ETHER_ADDRESS ? 'buy' : 'sell'
+
   return({
     ...order,
     orderType,
@@ -300,13 +311,14 @@ const buildGraphData = (orders) => {
     const open = group[0] // first order
     const high = maxBy(group, 'tokenPrice') // high price
     const low = minBy(group, 'tokenPrice') // low price
-    const close = group[group.length -1] // last order
+    const close = group[group.length - 1] // last order
 
     return({
       x: new Date(hour),
       y: [open.tokenPrice, high.tokenPrice, low.tokenPrice, close.tokenPrice]
     })
   })
+
   return graphData
 }
 
@@ -369,8 +381,3 @@ export const buyOrderSelector = createSelector(buyOrder, order => order)
 
 const sellOrder = state => get(state, 'exchange.sellOrder', {})
 export const sellOrderSelector = createSelector(sellOrder, order => order)
-
-
-
-
-
